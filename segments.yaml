@@ -1,0 +1,49 @@
+segments:
+  log_u_prior_plays:
+    description: "User activity level based on log-transformed prior plays"
+    bins:
+      - name: "light_segment"
+        range: "[0, 3]"
+        rule: "log_u_prior_plays >= 0 AND log_u_prior_plays <= 3"
+      - name: "average_segment"
+        range: "(3, 4]"
+        rule: "log_u_prior_plays > 3 AND log_u_prior_plays <= 4"
+      - name: "heavy_segment"
+        range: "[4, +inf)"
+        rule: "log_u_prior_plays > 4"
+
+  log_item_prior_plays:
+    description: "Item popularity based on log-transformed prior plays"
+    bins:
+      - name: "new_segment"
+        range: "[0, 0.2]"
+        rule: "log_item_prior_plays >= 0 AND log_item_prior_plays <= 0.2"
+      - name: "niche_segment"
+        range: "(0.2, 1]"
+        rule: "log_item_prior_plays > 0.2 AND log_item_prior_plays <= 1"
+      - name: "popular_segment"
+        range: "(1, 3]"
+        rule: "log_item_prior_plays > 1 AND log_item_prior_plays <= 3"
+      - name: "very_popular_segment"
+        range: "(3, +inf)"
+        rule: "log_item_prior_plays > 3"
+
+  u_algo_rate_smoothed:
+    description: "User historical share of algorithmic recommendations (smoothed)"
+    bins:
+      - name: "organic_dominant_segment"
+        range: "[0, 0.1]"
+        rule: "u_algo_rate_smoothed >= 0 AND u_algo_rate_smoothed <= 0.1"
+        note: "Near-exclusive organic exposure (≈<=10% algo)."
+      - name: "mixed_segment"
+        range: "(0.1, 0.9]"
+        rule: "u_algo_rate_smoothed > 0.1 AND u_algo_rate_smoothed <= 0.9"
+      - name: "algo_dominant_segment"
+        range: "(0.9, 1]"
+        rule: "u_algo_rate_smoothed > 0.9 AND u_algo_rate_smoothed <= 1"
+        note: "Near-exclusive algorithmic exposure (≈>=90% algo)."
+
+metadata:
+  version: "1.0"
+  notes:
+    - "Ranges are written as mathematical intervals; 'rule' is the exact SQL logical condition."
