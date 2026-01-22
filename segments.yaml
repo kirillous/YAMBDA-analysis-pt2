@@ -28,20 +28,15 @@ segments:
         range: "(3, +inf)"
         rule: "log_item_prior_plays > 3"
 
-  u_algo_rate_smoothed:
-    description: "User historical share of algorithmic recommendations (smoothed)"
+  u_like_rate_smoothed:
+    description: "User like rate based on smoothed values"
     bins:
-      - name: "organic_dominant_segment"
+      - name: "rare_likers_segment"
         range: "[0, 0.1]"
-        rule: "u_algo_rate_smoothed >= 0 AND u_algo_rate_smoothed <= 0.1"
-        note: "Near-exclusive organic exposure (≈<=10% algo)."
-      - name: "mixed_segment"
-        range: "(0.1, 0.9]"
-        rule: "u_algo_rate_smoothed > 0.1 AND u_algo_rate_smoothed <= 0.9"
-      - name: "algo_dominant_segment"
-        range: "(0.9, 1]"
-        rule: "u_algo_rate_smoothed > 0.9 AND u_algo_rate_smoothed <= 1"
-        note: "Near-exclusive algorithmic exposure (≈>=90% algo)."
+        rule: "u_like_rate_smoothed >= 0 AND u_like_rate_smoothed <= 0.1"
+      - name: "engaged_likers_segment"
+        range: "(0.1, 1]"
+        rule: "u_like_rate_smoothed > 0.1 AND u_like_rate_smoothed <= 1"
 
 metadata:
   version: "1.0"
