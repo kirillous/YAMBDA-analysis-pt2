@@ -12,10 +12,11 @@ class SegmentEstimator:
         self.data_path = data_path
         self.propensity_col = propensity_col
 
-    def load_segment(self, segment_rules):
+    def load_segment(self, segment_rules, cols):
         where_clause = " AND ".join(segment_rules)
+        select_clause = "*" if cols is None else ", ".join(cols)
         query = f"""
-        SELECT *
+        SELECT {select_clause}
         FROM read_parquet('{self.data_path}')
         WHERE {where_clause}
         """
@@ -55,18 +56,18 @@ class SegmentEstimator:
             "ATE_dislike": round(float(dislike_t - dislike_c), 5),
         }
     
-    def run_segment(self, segment_rules):
-        df = self.load_segment(segment_rules)
+    def run_segment(self, df):
         if len(df) == 0:
-            return {"error": "Empty segment"}
+            return pd.DataFrame({"metric": ["error"], "value": ["Empty segment"]})
         df_trim, overlap_stats = self.apply_overlap(df)
         df_w, ess = self.compute_weights(df_trim)
         outcomes = self.compute_outcomes(df_w)
-        return {
-            "overlap_stats": overlap_stats,
+        result = {
+            **overlap_stats,
             "ESS": round(float(ess), 3),
-            "outcomes": outcomes,
+            **outcomes
         }
+        return pd.DataFrame(list(result.items()), columns=["metric", "value"])
 
     def smd(self, df, cols, weighted=False):
         smd_dict = {}
@@ -92,12 +93,13 @@ class SegmentEstimator:
             smd_dict[col] = smd_val
         return smd_dict
 
-    def smd_plot(self, segment_rules, cols):
-        df = self.load_segment(segment_rules)
+    def smd_plot(self, df, cols):
         df_trim, _ = self.apply_overlap(df)
-        df_w, _ = self.compute_weights(df_trim)
         smd_before = self.smd(df_trim, cols, weighted=False)
+        df_w, _ = self.compute_weights(df_trim)
+        del df_trim
         smd_after = self.smd(df_w, cols, weighted=True)
+        del df_w
         features = list(smd_before.keys())
         before_vals = [smd_before[f] for f in features]
         after_vals = [smd_after[f] for f in features]
@@ -117,8 +119,7 @@ class SegmentEstimator:
         plt.tight_layout()
         plt.show()
 
-    def propensity_distribution_plot(self, segment_rules):
-        df = self.load_segment(segment_rules)
+    def propensity_distribution_plot(self, df):
         df_trim, _ = self.apply_overlap(df)
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(8, 5))
